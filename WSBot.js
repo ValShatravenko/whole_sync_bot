@@ -19,12 +19,16 @@ bot.on('text', function(msg)
     var messageText = msg.text;
     var messageDate = msg.date;
     var messageUsr = msg.from.username;
+    var messageLoc = msg.location;
 
     if (messageText === '/say') {
         sendMessageByBot(messageChatId, 'Ready For Duty!');
     }
     else if(messageText.substr(0,5) == '/meet') {
         sendMessageByBot(messageChatId, 'Mockup for time');
+    }
+    else if(messageLoc) {
+        sendMessageByBot(messageChatId, messageLoc);
     }
 
     console.log(msg);
