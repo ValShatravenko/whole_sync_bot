@@ -4,7 +4,10 @@ var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 
 var SCOPES = ['https://www.googleapis.com/auth/calendar'];
-var TOKEN_PATH = '.credentials/' + 'calendar-nodejs-quickstart.json';
+var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
+    process.env.USERPROFILE) + '/.credentials/';
+var TOKEN_PATH = TOKEN_DIR + 'calendar-nodejs-quickstart.json';
+
 
 var file = "client_secret_524137976975-1p8uh9kcfshlru3t5q24h0vnqd3de224.apps.googleusercontent.com.json";
 
