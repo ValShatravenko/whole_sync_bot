@@ -1,5 +1,7 @@
 var TelegramBot = require('node-telegram-bot-api');
 
+// TODO Split instead of substring
+
 var token = '321444455:AAHVJCG-EKqLe9W5aYPmK_CFXHVPy4JO8MA';
 var botOptions = {
     polling: true
@@ -7,6 +9,18 @@ var botOptions = {
 var bot = new TelegramBot(token, botOptions);
 var meetOn = false;
 var times  = [];
+var totalStart;
+var totalEnd;
+
+function calcTime(timesArr, startTime, endTime) {
+    for(var i = 0; i < timesArr.length - 1; i += 2) {
+      if(timesArr[i] > startTime) startTime = timesArr[i];
+      if(timesArr[i + 1] < endTime) endTime = timesArr[i + 1];
+    }
+
+   if(startTime > endTime) return 0;
+   else return startTime;
+}
 
 
 bot.getMe().then(function(me)
@@ -27,44 +41,54 @@ bot.on('text', function(msg)
 
     if (messageText === '/say') {
         sendMessageByBot(messageChatId, 'Ready For Duty!');
-        sendMessageByBot(messageChatId, messageArr[1]);
     }
-    else if(messageText.substr(0,5) == '/meet') {
-        var meetStart;
-        var meetEnd;
-
+    else if(messageArr[0] == '/meet') {
         if(!meetOn) {
-          meetStart = messageArr[1];
-          meetEnd   = messageArr[2];
-
-          sendMessageByBot("Configurating meeting from " + meetStart + " to " + meetEnd);
+          totalStart = parseInt(messageArr[1]);
+          totalEnd   = parseInt(messageArr[2]);
+          if(totalStart >= totalEnd) {
+            sendMessageByBot(messageChatId, "Invalid data entered!");
+            return;
+          }
+          sendMessageByBot(messageChatId, "Started meeting from " + totalStart + " to " + totalEnd);
 
           meetOn = true;
         }
         else {
-          sendMessageByBot("Meeting config already in process!");
+          sendMessageByBot(messageChatId, "Meeting config already in process!");
         }
     }
-    else if(messageText.substr(0,4) == "/add") {
+    else if(messageArr[0] == "/add") {
       if(meetOn) {
-          times.push(messageArr[1], messageArr[2]);
-          sendMessageByBot("Pushed new period from " +
-           messageArr[1] + " to " + messageArr[2]);
+          var timeStart;
+          var timeEnd;
+
+          timeStart = parseInt(messageArr[1]);
+          timeEnd   = parseInt(messageArr[2]);
+
+          if(timeStart < totalStart || timeEnd > totalEnd || timeStart > timeEnd) {
+             sendMessageByBot(messageChatId, "Invalid data entered!");
+             return;
+          }
+
+          times.push(timeStart, timeEnd);
+          sendMessageByBot(messageChatId, "Pushed new period from " +
+           timeStart + " to " + timeEnd);
       }
       else {
-          sendMessageByBot("No meeting config in progress");
+          sendMessageByBot(messageChatId, "No meeting config in progress");
       }
     }
     else if(messageText == '/finish') {
         if(meetOn) {
-          sendMessageByBot("Finished cobfig, calculating... End");
-          for(var i = 0; i < times.length - 2; i += 2) {
-            sendMessageByBot(times[i] + " - " + times[i+1] + "\n");
-          }
+          sendMessageByBot(messageChatId, "Finished config, calculating... End");
+          sendMessageByBot(messageChatId, "Time of meeting: " + calcTime(times, totalStart, totalEnd));
+
+          times = [];
           meetOn = false;
         }
         else {
-          sendMessageByBot("No meet configs in progress!");
+          sendMessageByBot(messageChatId, "No meet configs in progress!");
         }
     }
     else if(messageLoc) {
