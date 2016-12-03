@@ -5,6 +5,9 @@ var botOptions = {
     polling: true
 };
 var bot = new TelegramBot(token, botOptions);
+var meetOn = false;
+var times  = [];
+
 
 bot.getMe().then(function(me)
 {
@@ -20,12 +23,49 @@ bot.on('text', function(msg)
     var messageDate = msg.date;
     var messageUsr = msg.from.username;
     var messageLoc = msg.location;
+    var messageArr = messageText.split(' ');
 
     if (messageText === '/say') {
         sendMessageByBot(messageChatId, 'Ready For Duty!');
+        sendMessageByBot(messageChatId, messageArr[1]);
     }
     else if(messageText.substr(0,5) == '/meet') {
-        sendMessageByBot(messageChatId, 'Mockup for time');
+        var meetStart;
+        var meetEnd;
+
+        if(!meetOn) {
+          meetStart = messageArr[1];
+          meetEnd   = messageArr[2];
+
+          sendMessageByBot("Configurating meeting from " + meetStart + " to " + meetEnd);
+
+          meetOn = true;
+        }
+        else {
+          sendMessageByBot("Meeting config already in process!");
+        }
+    }
+    else if(messageText.substr(0,4) == "/add") {
+      if(meetOn) {
+          times.push(messageArr[1], messageArr[2]);
+          sendMessageByBot("Pushed new period from " +
+           messageArr[1] + " to " + messageArr[2]);
+      }
+      else {
+          sendMessageByBot("No meeting config in progress");
+      }
+    }
+    else if(messageText == '/finish') {
+        if(meetOn) {
+          sendMessageByBot("Finished cobfig, calculating... End");
+          for(var i = 0; i < times.length - 2; i += 2) {
+            sendMessageByBot(times[i] + " - " + times[i+1] + "\n");
+          }
+          meetOn = false;
+        }
+        else {
+          sendMessageByBot("No meet configs in progress!");
+        }
     }
     else if(messageLoc) {
         sendMessageByBot(messageChatId, messageLoc);
